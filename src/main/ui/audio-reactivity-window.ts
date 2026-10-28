@@ -1,10 +1,10 @@
-import { BrowserWindow, desktopCapturer, ipcMain, screen, session, type IpcMainEvent, type Session } from 'electron'
+import { BrowserWindow, ipcMain, screen, session, type IpcMainEvent, type Session } from 'electron'
 import { IPC } from '@shared/ipc'
 import type { Log } from '../logger'
 import { harden, loadPage, secureWebPreferences } from './windows'
 
 const WIDTH = 440
-const HEIGHT = 360
+const HEIGHT = 500
 
 export interface AudioReactivityDeps {
   log: Log
@@ -19,23 +19,17 @@ export class AudioReactivityWindow {
 
   constructor(private readonly deps: AudioReactivityDeps) {
     this.captureSession = session.fromPartition('audio-reactivity')
-    this.captureSession.setDisplayMediaRequestHandler((_request, callback) => {
-      void desktopCapturer
-        .getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } })
-        .then((sources) => {
-          const source = sources[0]
-          if (!source) {
-            callback({})
-            return
-          }
-          // Video is required by Chromium's display-media request; the renderer immediately
-          // stops that track and consumes only Windows' supported system loopback audio.
-          callback({ video: source, audio: 'loopback' })
-        })
-        .catch((error: unknown) => {
-          this.deps.log(`audio: could not initialize Windows loopback (${String(error)})`)
-          callback({})
-        })
+    this.captureSession.setDisplayMediaRequestHandler((request, callback) => {
+      const win = this.win
+      const ownMainFrame = !!win && !win.isDestroyed() && request.frame === win.webContents.mainFrame
+      if (!ownMainFrame || !request.frame || !request.userGesture || !request.audioRequested || !request.videoRequested) {
+        callback({})
+        return
+      }
+      // Chromium requires a video request for getDisplayMedia. Capture only this small,
+      // app-owned control window—not an arbitrary desktop display—and the renderer stops
+      // the video track immediately. The only consumed stream is Windows audio loopback.
+      callback({ video: request.frame, audio: 'loopback' })
     })
     ipcMain.on(IPC.audioBeat, this.onBeat)
   }

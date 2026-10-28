@@ -13,6 +13,10 @@ button:hover { filter: brightness(1.08); }
 button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 button#stop { background: rgba(255,255,255,.1); box-shadow: none; }
 button[hidden] { display: none; }
+.sensitivity { display: flex; justify-content: space-between; align-items: center; margin-top: 17px; color: rgba(255,255,255,.78); font-size: 11px; }
+.sensitivity output { color: #f284ac; font-size: 10px; font-weight: 650; }
+#sensitivity { display: block; width: 100%; margin: 8px 0 0; accent-color: #dd5a91; cursor: pointer; }
+#sensitivity:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .meter { display: flex; align-items: center; height: 23px; gap: 3px; margin-top: 17px; opacity: .25; }
 .meter i { display: block; width: 5px; height: 3px; border-radius: 3px; background: linear-gradient(#f28bb0,#b566d0); transition: height 60ms linear; }
 #status { margin-top: 3px; min-height: 16px; color: rgba(255,255,255,.7); font-size: 10px; }

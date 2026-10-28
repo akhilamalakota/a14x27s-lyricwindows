@@ -28,6 +28,9 @@ let cardTrackKey = ''
 let trackDurationMs = 0
 let audioBeat = 0
 let audioBeatAt = 0
+let lastProgress = Number.NaN
+let lastBeatGlow = Number.NaN
+let lastRimOpacity = Number.NaN
 const clock = new SongClock()
 const lockClock = new LockClock(document.body)
 
@@ -81,6 +84,8 @@ function applyState(state: StageState): void {
   if (track?.title) {
     if (track.key !== cardTrackKey) {
       cardTrackKey = track.key
+      songProgress.style.transform = 'scaleX(0)'
+      lastProgress = 0
       songCard.classList.remove('song-card-enter')
       void songCard.offsetWidth
       songCard.classList.add('song-card-enter')
@@ -133,16 +138,27 @@ function render(songMs: number, wallMs: number): boolean {
 
 /** Light swells at word onsets using the same corrected song clock as the lyric renderer. */
 function updateLighting(songMs: number, wallMs: number): void {
-  if (trackDurationMs > 0) songProgress.style.transform = `scaleX(${Math.max(0, Math.min(1, songMs / trackDurationMs))})`
-  document.body.dataset.playing = clock.playing ? 'yes' : 'no'
+  const progress = trackDurationMs > 0 ? Math.max(0, Math.min(1, songMs / trackDurationMs)) : 0
+  if (!Number.isFinite(lastProgress) || Math.abs(progress - lastProgress) > 0.001) {
+    songProgress.style.transform = `scaleX(${progress})`
+    lastProgress = progress
+  }
+  const playing = clock.playing ? 'yes' : 'no'
+  if (document.body.dataset.playing !== playing) document.body.dataset.playing = playing
   if (document.body.dataset.lighting !== 'on' || !clock.playing) {
-    rimLight.style.opacity = '0'
-    document.documentElement.style.setProperty('--beat-glow', '0')
+    if (lastRimOpacity !== 0) rimLight.style.opacity = '0'
+    if (lastBeatGlow !== 0) document.documentElement.style.setProperty('--beat-glow', '0')
+    lastRimOpacity = 0
+    lastBeatGlow = 0
     return
   }
   let level = 0.2
   const beatPulse = audioBeat * Math.exp(-Math.max(0, wallMs - audioBeatAt) / 330)
-  document.documentElement.style.setProperty('--beat-glow', String(Math.min(1, beatPulse)))
+  const beatGlow = Math.min(1, beatPulse)
+  if (!Number.isFinite(lastBeatGlow) || Math.abs(beatGlow - lastBeatGlow) > 0.01) {
+    document.documentElement.style.setProperty('--beat-glow', String(beatGlow))
+    lastBeatGlow = beatGlow
+  }
   if (model?.words.length) {
     const word = model.words[activeWordIndex(model, songMs)]
     if (word && songMs >= word.start && songMs <= word.end) {
@@ -154,7 +170,11 @@ function updateLighting(songMs: number, wallMs: number): void {
     // Gentle ambient fallback while lyrics are unavailable; this is not beat detection.
     level += 0.08 * (0.5 + 0.5 * Math.sin(wallMs / 1200))
   }
-  rimLight.style.opacity = String(Math.max(0, Math.min(0.88, level + beatPulse * 0.72)))
+  const rimOpacity = Math.max(0, Math.min(0.88, level + beatPulse * 0.72))
+  if (!Number.isFinite(lastRimOpacity) || Math.abs(rimOpacity - lastRimOpacity) > 0.01) {
+    rimLight.style.opacity = String(rimOpacity)
+    lastRimOpacity = rimOpacity
+  }
 }
 
 function loop(): void {
@@ -201,7 +221,7 @@ api.onAnchor((anchor) => {
 })
 
 api.onBeat((strength) => {
-  audioBeat = Math.max(audioBeat, Math.min(1, strength))
+  audioBeat = Math.min(1, Math.max(0, strength))
   audioBeatAt = performance.now()
   startLoop()
 })

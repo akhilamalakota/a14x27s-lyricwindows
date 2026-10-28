@@ -58,11 +58,11 @@ Pick one in tray → **Show Lyrics**.
 - **Auto Sync** takes the colours from the album art and keeps them readable on black.
 - **Lyric Text…**, **Highlight…** and **Secondary Text…** let you pick your own colours. **Reset Colors** goes back to the defaults.
 - **Ambient Lyric Lighting** adds a soft screen-edge glow. It follows lyric word timing, and its colors follow album artwork when available without changing your lyric text colors.
-- Open tray → **Set Up Live Audio-Reactive Lighting…**, then press **Start live audio analysis** to add pulses from real bass transients in Windows system audio. This is an explicit opt-in; it listens to system output, not your microphone.
+- Open tray → **Set Up Live Audio-Reactive Lighting…**, then press **Start live audio analysis** to add pulses from low-frequency transients in Windows system audio. Adjust **Beat sensitivity** if quiet beats are missed or unrelated sounds trigger pulses. This is an explicit opt-in; it listens to system output, not your microphone.
 
 When a track is playing, the lyrics screen also shows a compact now-playing card with cover art, title, artist, album, and progress. It transitions when the track changes and uses a generated placeholder if artwork is unavailable.
 
-Live audio analysis runs on the PC. Audio is neither recorded nor sent over the network. Electron requires a temporary low-resolution desktop video track to open system loopback; the app stops and discards that track immediately without displaying or storing it. The capture panel remains open while analysis is active; press **Stop analysis** or close the panel to end it. Beat pulses follow the audio reaching the system output, while lyrics follow their source timestamps. Bluetooth output latency and estimated word timings can still cause a small perceptible difference.
+Live audio analysis runs on the PC. Audio is neither recorded nor sent over the network. Electron requires a temporary video track to open system loopback; the main process only grants a user-initiated request from the app's own small control window, and that window's video track is stopped immediately. The app does not capture your desktop. The capture panel remains open while analysis is active; press **Stop analysis** or close the panel to end it. Beat pulses follow the audio reaching the system output, while lyrics follow their source timestamps. Bluetooth output latency and estimated word timings can still cause a small perceptible difference.
 
 ### Everything else in the tray
 

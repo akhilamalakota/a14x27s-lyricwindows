@@ -13,6 +13,7 @@ const api: LyricsAppApi = {
   stage: {
     onState: (cb) => subscribe(IPC.stageState, cb),
     onAnchor: (cb) => subscribe(IPC.stageAnchor, cb),
+    onBeat: (cb) => subscribe(IPC.stageBeat, cb),
     onSnapshot: (cb) => subscribe(IPC.stageSnapshot, cb),
     onSession: (cb) => subscribe(IPC.stageSession, cb),
     snapshotDone: (id) => ipcRenderer.send(IPC.stageSnapshotDone, id),
@@ -28,6 +29,11 @@ const api: LyricsAppApi = {
     setAutoSync: (on) => ipcRenderer.send(IPC.colorsAutoSync, on),
     reset: () => ipcRenderer.send(IPC.colorsReset),
     onState: (cb) => subscribe(IPC.colorsState, cb)
+  },
+  audio: {
+    beat: (strength) => {
+      if (Number.isFinite(strength)) ipcRenderer.send(IPC.audioBeat, Math.max(0, Math.min(1, strength)))
+    }
   }
 }
 

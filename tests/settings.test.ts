@@ -19,6 +19,13 @@ describe('sanitizeSettings', () => {
     expect(sanitizeSettings({ wordLevel: 1 }).wordLevel).toBe(true)
   })
 
+  it('enables lyric lighting for existing installs and allows it to be disabled', () => {
+    expect(DEFAULT_SETTINGS.lighting).toBe(true)
+    expect(sanitizeSettings({ style: 'ship' }).lighting).toBe(true)
+    expect(sanitizeSettings({ lighting: false }).lighting).toBe(false)
+    expect(sanitizeSettings({ lighting: 'yes' }).lighting).toBe(true)
+  })
+
   it('does not lock Windows from the lyrics screen unless asked to', () => {
     expect(DEFAULT_SETTINGS.lockOnReturn).toBe(false)
     expect(sanitizeSettings({ lockOnReturn: 'yes' }).lockOnReturn).toBe(false)

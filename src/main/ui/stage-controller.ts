@@ -18,10 +18,13 @@ interface StageWindow {
 
 export interface StageContent {
   track: TrackInfo | null
+  artworkUrl: string | null
   lyrics: TimedLyrics | null
   style: StyleId
   palette: Palette
+  ambientPalette: Palette
   offsetMs: number
+  lighting: boolean
 }
 
 export interface StageControllerDeps {
@@ -84,6 +87,10 @@ export class StageController {
   updateAnchor(anchor: PlaybackAnchor): void {
     this.anchor = anchor
     for (const sw of this.windows()) sw.win.webContents.send(IPC.stageAnchor, anchor)
+  }
+
+  updateBeat(strength: number): void {
+    for (const sw of this.windows()) sw.win.webContents.send(IPC.stageBeat, strength)
   }
 
   /** Display or mode changed in settings. */
@@ -381,8 +388,9 @@ export class StageController {
     const c = this.content
     const state: StageState = {
       track: c.track,
+      artworkUrl: c.artworkUrl,
       lyrics: c.lyrics,
-      config: { style: c.style, palette: c.palette, offsetMs: c.offsetMs, mode: sw.kind === 'lock' ? 'lock' : 'always' }
+      config: { style: c.style, palette: c.palette, ambientPalette: c.ambientPalette, offsetMs: c.offsetMs, lighting: c.lighting, mode: sw.kind === 'lock' ? 'lock' : 'always' }
     }
     sw.win.webContents.send(IPC.stageState, state)
   }

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Audio Lighting</title>
+  </head>
+  <body>
+    <main class="panel">
+      <div class="eyebrow">THE AESTHETICSLYRICS · LIVE LIGHTING</div>
+      <h1>Let the light hear the beat.</h1>
+      <p class="intro">Analyze Windows system audio locally and pulse the screen-edge light on real music transients.</p>
+      <div class="privacy"><strong>Private by design</strong><br />Audio is analyzed on this PC only. No recording, uploads, microphone, or audio storage. Windows desktop audio loopback starts only after you press Start. Electron requires a temporary low-resolution screen track for capture; the app discards it immediately and never displays or stores it.</div>
+      <button id="start" type="button">Start live audio analysis</button>
+      <button id="stop" type="button" hidden>Stop analysis</button>
+      <div class="meter" aria-hidden="true"><i></i></div>
+      <div id="status" role="status">Off · lyric-timed ambient light remains available</div>
+      <p class="note">For the closest sync, keep Windows output latency low. Beat detection reacts to the audio reaching your speakers; lyrics follow the player’s timestamps and can vary by lyric source.</p>
+    </main>
+    <script type="module" src="./src/audio/main.ts"></script>
+  </body>
+</html>

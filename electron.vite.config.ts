@@ -23,7 +23,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           stage: resolve(__dirname, 'src/renderer/stage.html'),
-          colors: resolve(__dirname, 'src/renderer/colors.html')
+          colors: resolve(__dirname, 'src/renderer/colors.html'),
+          audio: resolve(__dirname, 'src/renderer/audio.html')
         }
       }
     }

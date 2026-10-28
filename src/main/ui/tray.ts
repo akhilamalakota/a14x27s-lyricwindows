@@ -25,6 +25,8 @@ export interface TrayActions {
   setLockOnReturn(on: boolean): void
   setOffset(ms: number): void
   setWordLevel(on: boolean): void
+  setLighting(on: boolean): void
+  openAudioReactivity(): void
   setIdle(minutes: IdleMinutes): void
   setAllPlayers(on: boolean): void
   openLyricsFolder(): void
@@ -177,6 +179,8 @@ export class TrayMenu {
       { label: 'Highlight…', icon: this.swatch(m.palette.highlight), click: () => a.editColors('highlight') },
       { label: 'Secondary Text…', icon: this.swatch(m.palette.secondary), click: () => a.editColors('secondary') },
       { label: 'Reset Colors', click: () => a.resetColors() },
+      { label: 'Ambient Lyric Lighting', type: 'checkbox', checked: s.lighting, click: (item) => a.setLighting(item.checked) },
+      { label: 'Set Up Live Audio-Reactive Lighting…', click: () => a.openAudioReactivity() },
       { type: 'separator' },
       { label: 'Timing', submenu: OFFSETS.map((o) => radio(o.label, s.offsetMs === o.ms, () => a.setOffset(o.ms))) },
       {

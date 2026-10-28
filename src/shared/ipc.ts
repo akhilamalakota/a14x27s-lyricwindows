@@ -11,19 +11,24 @@ export const IPC = {
   colorsSet: 'colors:set',
   colorsAutoSync: 'colors:auto-sync',
   colorsReset: 'colors:reset',
-  colorsState: 'colors:state'
+  colorsState: 'colors:state',
+  audioBeat: 'audio:beat',
+  stageBeat: 'stage:beat'
 } as const
 
 export interface StageConfig {
   style: StyleId
   mode: ShowOn
   palette: Palette
+  ambientPalette: Palette
   offsetMs: number
+  lighting: boolean
 }
 
 /** Everything the stage needs besides the moving playback clock. */
 export interface StageState {
   track: TrackInfo | null
+  artworkUrl: string | null
   lyrics: TimedLyrics | null
   config: StageConfig
 }
@@ -58,6 +63,7 @@ export interface ColorsState {
 export interface StageApi {
   onState(cb: (state: StageState) => void): () => void
   onAnchor(cb: (anchor: PlaybackAnchor) => void): () => void
+  onBeat(cb: (strength: number) => void): () => void
   onSnapshot(cb: (req: SnapshotRequest) => void): () => void
   onSession(cb: (info: StageSessionInfo) => void): () => void
   snapshotDone(id: number): void
@@ -73,7 +79,12 @@ export interface ColorsApi {
   onState(cb: (state: ColorsState) => void): () => void
 }
 
+export interface AudioApi {
+  beat(strength: number): void
+}
+
 export interface LyricsAppApi {
   stage: StageApi
   colors: ColorsApi
+  audio: AudioApi
 }

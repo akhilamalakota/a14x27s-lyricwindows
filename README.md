@@ -57,6 +57,12 @@ Pick one in tray → **Show Lyrics**.
 - The default palette is red for sung words, a pink highlight and soft pink for words still to come.
 - **Auto Sync** takes the colours from the album art and keeps them readable on black.
 - **Lyric Text…**, **Highlight…** and **Secondary Text…** let you pick your own colours. **Reset Colors** goes back to the defaults.
+- **Ambient Lyric Lighting** adds a soft screen-edge glow. It follows lyric word timing, and its colors follow album artwork when available without changing your lyric text colors.
+- Open tray → **Set Up Live Audio-Reactive Lighting…**, then press **Start live audio analysis** to add pulses from real bass transients in Windows system audio. This is an explicit opt-in; it listens to system output, not your microphone.
+
+When a track is playing, the lyrics screen also shows a compact now-playing card with cover art, title, artist, album, and progress. It transitions when the track changes and uses a generated placeholder if artwork is unavailable.
+
+Live audio analysis runs on the PC. Audio is neither recorded nor sent over the network. Electron requires a temporary low-resolution desktop video track to open system loopback; the app stops and discards that track immediately without displaying or storing it. The capture panel remains open while analysis is active; press **Stop analysis** or close the panel to end it. Beat pulses follow the audio reaching the system output, while lyrics follow their source timestamps. Bluetooth output latency and estimated word timings can still cause a small perceptible difference.
 
 ### Everything else in the tray
 
@@ -66,6 +72,8 @@ Pick one in tray → **Show Lyrics**.
 | **Style** | Ship, Fisheye, Fisheye Visual or Visual. |
 | **Timing** | Shifts the words earlier or later. Bluetooth headphones usually need *0.25–0.5 s Later*. |
 | **Precise Word Timing (NetEase)** | Uses real per-word timing when NetEase has the song (see below). |
+| **Ambient Lyric Lighting** | Turns the color-adaptive edge glow on or off. |
+| **Set Up Live Audio-Reactive Lighting…** | Opens the local audio control panel; live loopback starts only after you press its start button. |
 | **Players** | *Spotify and Apple Music*, or *All Media Apps* (browsers, YouTube Music and anything else that shows in Windows' media controls). |
 | **Open Lyrics Folder** | Opens the folder for your own `.lrc` files. |
 | **Start with Windows** | Starts the app quietly in the tray when you sign in. |
@@ -87,6 +95,7 @@ Lyrics you've played before load instantly from a local cache. Songs with no syn
 
 - To look lyrics up, the app sends only the song's **title, artist, album and length** to `lrclib.net` and, if precise word timing is on, to `music.163.com`.
 - It has no accounts, analytics, telemetry or ads.
+- Live beat detection is opt-in and analyzes Windows system audio locally. The audio stream is not stored or uploaded; the capture panel must remain open while it is active.
 - Everything else stays on your PC, in `%APPDATA%\theaestheticslyrics`: settings, the lyrics cache, the log and your own lyrics.
 
 ## Troubleshooting

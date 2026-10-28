@@ -14,6 +14,7 @@ import { extractPalette, paletteFromColors } from './palette/extract'
 import type { AppPaths } from './paths'
 import { PowerKeeper } from './power'
 import { SettingsStore, type Settings } from './settings'
+import { AudioReactivityWindow } from './ui/audio-reactivity-window'
 import { ColorsWindow } from './ui/colors-window'
 import { StageController } from './ui/stage-controller'
 import { TrayMenu, type TrayActions } from './ui/tray'
@@ -48,12 +49,14 @@ export class AppController {
   private stage!: StageController
   private tray!: TrayMenu
   private colors!: ColorsWindow
+  private audioReactivity!: AudioReactivityWindow
   private power!: PowerKeeper
   private track: TrackInfo | null = null
   private anchor: PlaybackAnchor | null = null
   private timed: TimedLyrics | null = null
   private status: LyricsStatus = 'idle'
   private albumPalette: Palette | null = null
+  private artworkUrl: string | null = null
   private health: { ok: boolean; message?: string } = { ok: true }
   private hotkeyOk = false
   private lookupToken = 0
@@ -94,6 +97,11 @@ export class AppController {
       setColor: (role, hex) => this.settings.update({ autoSync: false, colors: { ...this.settings.get().colors, [role]: hex } }),
       setAutoSync: (autoSync) => this.settings.update({ autoSync }),
       reset: () => this.settings.update({ colors: { ...DEFAULT_COLORS } })
+    })
+    this.audioReactivity = new AudioReactivityWindow({
+      log: this.log,
+      iconPath: this.paths.appIcon,
+      onBeat: (strength) => this.stage.updateBeat(strength)
     })
     this.tray = new TrayMenu(this.paths.trayIcon, this.trayActions())
 
@@ -146,6 +154,7 @@ export class AppController {
     this.stage?.dispose()
     this.power?.dispose()
     this.colors?.destroy()
+    this.audioReactivity?.destroy()
     this.tray?.destroy()
   }
 
@@ -166,6 +175,7 @@ export class AppController {
     this.track = track
     this.timed = null
     this.albumPalette = null
+    this.artworkUrl = null
     this.anchor = null
     const token = ++this.lookupToken
     this.status = track?.title ? 'searching' : 'idle'
@@ -220,12 +230,12 @@ export class AppController {
       const small = image.resize({ width: 64, height: 64, quality: 'good' })
       const { width, height } = small.getSize()
       this.albumPalette = extractPalette(small.toBitmap(), width, height)
+      this.artworkUrl = image.resize({ width: 320, height: 320, quality: 'good' }).toDataURL()
     } catch (err) {
       this.log(`palette: could not read album art (${String(err)})`)
       return
     }
-    if (this.settings.get().autoSync) this.refresh()
-    else this.colors.push(this.colorsState())
+    this.refresh()
   }
 
   private onSettings(s: Settings): void {
@@ -260,7 +270,7 @@ export class AppController {
     const playing = this.anchor?.playing ?? false
     const hasLyrics = this.status === 'found' && this.timed !== null
     this.stage.update(
-      { track: this.track, lyrics: hasLyrics ? this.timed : null, style: s.style, palette: this.palette(), offsetMs: s.offsetMs },
+      { track: this.track, artworkUrl: this.artworkUrl, lyrics: hasLyrics ? this.timed : null, style: s.style, palette: this.palette(), ambientPalette: this.albumPalette ?? this.palette(), offsetMs: s.offsetMs, lighting: s.lighting },
       { playing, hasLyrics }
     )
     this.power.update(playing && hasLyrics)
@@ -304,6 +314,8 @@ export class AppController {
       setLockOnReturn: (lockOnReturn) => this.settings.update({ lockOnReturn }),
       setOffset: (offsetMs) => this.settings.update({ offsetMs }),
       setWordLevel: (wordLevel) => this.settings.update({ wordLevel }),
+      setLighting: (lighting) => this.settings.update({ lighting }),
+      openAudioReactivity: () => this.audioReactivity.open(),
       setIdle: (idleMinutes) => this.settings.update({ idleMinutes }),
       setAllPlayers: (allPlayers) => this.settings.update({ allPlayers }),
       openLyricsFolder: () => {

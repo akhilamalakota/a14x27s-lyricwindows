@@ -30,6 +30,8 @@ export interface Settings {
   lockOnReturn: boolean
   /** Also ask NetEase (unofficial) for real per-word timing; LRCLIB stays the fallback. */
   wordLevel: boolean
+  /** Draw lyric-timed ambient edge lighting behind the words. */
+  lighting: boolean
 }
 
 export const IDLE_CHOICES: readonly IdleMinutes[] = [0, 1, 2, 5]
@@ -48,7 +50,8 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   launchAtLogin: false,
   welcomed: false,
   lockOnReturn: false,
-  wordLevel: true
+  wordLevel: true,
+  lighting: true
 }) as Readonly<Settings>
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -81,7 +84,8 @@ export function sanitizeSettings(raw: unknown): Settings {
     launchAtLogin: typeof r.launchAtLogin === 'boolean' ? r.launchAtLogin : DEFAULT_SETTINGS.launchAtLogin,
     welcomed: typeof r.welcomed === 'boolean' ? r.welcomed : DEFAULT_SETTINGS.welcomed,
     lockOnReturn: typeof r.lockOnReturn === 'boolean' ? r.lockOnReturn : DEFAULT_SETTINGS.lockOnReturn,
-    wordLevel: typeof r.wordLevel === 'boolean' ? r.wordLevel : DEFAULT_SETTINGS.wordLevel
+    wordLevel: typeof r.wordLevel === 'boolean' ? r.wordLevel : DEFAULT_SETTINGS.wordLevel,
+    lighting: typeof r.lighting === 'boolean' ? r.lighting : DEFAULT_SETTINGS.lighting
   }
 }
 

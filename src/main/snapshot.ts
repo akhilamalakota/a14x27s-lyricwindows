@@ -63,8 +63,9 @@ export async function runSnapshots(opts: SnapshotOptions): Promise<string[]> {
     for (const style of opts.styles ?? STYLE_IDS) {
       const state: StageState = {
         track: DEMO_TRACK,
+        artworkUrl: null,
         lyrics,
-        config: { style, mode: opts.mode ?? 'lock', palette: opts.palette ?? { ...DEFAULT_PALETTE }, offsetMs: 0 }
+        config: { style, mode: opts.mode ?? 'lock', palette: opts.palette ?? { ...DEFAULT_PALETTE }, ambientPalette: opts.palette ?? { ...DEFAULT_PALETTE }, offsetMs: 0, lighting: true }
       }
       win.webContents.send(IPC.stageState, state)
       for (const [i, songMs] of DEMO_MOMENTS.entries()) {

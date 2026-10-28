@@ -4,12 +4,30 @@ import type { StageState } from '@shared/ipc'
 import type { Palette, ShowOn, StyleId } from '@shared/types'
 import { SongClock } from './clock'
 import { LockClock } from './lock-clock'
-import { buildModel, msUntilNextWord, type LyricsModel } from './model'
+import { activeWordIndex, buildModel, msUntilNextWord, type LyricsModel } from './model'
 import { createStyle } from './styles/registry'
 import type { StageStyle } from './styles/types'
 
 const api = window.lyricsApp.stage
 const root = document.getElementById('stage')!
+const rimLight = document.createElement('div')
+rimLight.className = 'rim-light'
+rimLight.setAttribute('aria-hidden', 'true')
+document.body.insertBefore(rimLight, root)
+const songCard = document.createElement('section')
+songCard.className = 'song-card'
+songCard.setAttribute('aria-hidden', 'true')
+songCard.innerHTML = '<div class="song-card-art"><img alt="" /><span>♫</span></div><div class="song-card-copy"><div class="song-card-kicker">NOW PLAYING</div><div class="song-card-title"></div><div class="song-card-artist"></div><div class="song-card-album"></div><div class="song-card-progress"><i></i></div></div>'
+document.body.append(songCard)
+const songArtwork = songCard.querySelector('img')!
+const songTitle = songCard.querySelector('.song-card-title')!
+const songArtist = songCard.querySelector('.song-card-artist')!
+const songAlbum = songCard.querySelector('.song-card-album')!
+const songProgress = songCard.querySelector('.song-card-progress i') as HTMLElement
+let cardTrackKey = ''
+let trackDurationMs = 0
+let audioBeat = 0
+let audioBeatAt = 0
 const clock = new SongClock()
 const lockClock = new LockClock(document.body)
 
@@ -53,6 +71,26 @@ function applyState(state: StageState): void {
   lockClock.setVisible(mode === 'lock')
   palette = state.config.palette
   applyPaletteVars(palette)
+  document.documentElement.style.setProperty('--rim-a', state.config.ambientPalette.highlight)
+  document.documentElement.style.setProperty('--rim-b', state.config.ambientPalette.lyric)
+  document.body.dataset.lighting = state.config.lighting ? 'on' : 'off'
+  const track = state.track
+  trackDurationMs = track?.durationMs ?? 0
+  songCard.hidden = !track?.title
+  songCard.setAttribute('aria-hidden', track?.title ? 'false' : 'true')
+  if (track?.title) {
+    if (track.key !== cardTrackKey) {
+      cardTrackKey = track.key
+      songCard.classList.remove('song-card-enter')
+      void songCard.offsetWidth
+      songCard.classList.add('song-card-enter')
+    }
+    songTitle.textContent = track.title
+    songArtist.textContent = track.artist || track.app
+    songAlbum.textContent = track.album || ''
+    songArtwork.src = state.artworkUrl || ''
+    songCard.classList.toggle('has-artwork', Boolean(state.artworkUrl))
+  }
   clock.setOffset(state.config.offsetMs)
 
   const sig = signature(state)
@@ -87,9 +125,36 @@ const FRAME_RATE: Record<ShowOn, { busy: number; idle: number }> = {
 }
 
 function render(songMs: number, wallMs: number): boolean {
+  updateLighting(songMs, wallMs)
   const busy = style?.frame({ songMs, wallMs, width: window.innerWidth, height: window.innerHeight }) ?? false
   if (mode === 'lock') lockClock.update(Date.now())
   return busy
+}
+
+/** Light swells at word onsets using the same corrected song clock as the lyric renderer. */
+function updateLighting(songMs: number, wallMs: number): void {
+  if (trackDurationMs > 0) songProgress.style.transform = `scaleX(${Math.max(0, Math.min(1, songMs / trackDurationMs))})`
+  document.body.dataset.playing = clock.playing ? 'yes' : 'no'
+  if (document.body.dataset.lighting !== 'on' || !clock.playing) {
+    rimLight.style.opacity = '0'
+    document.documentElement.style.setProperty('--beat-glow', '0')
+    return
+  }
+  let level = 0.2
+  const beatPulse = audioBeat * Math.exp(-Math.max(0, wallMs - audioBeatAt) / 330)
+  document.documentElement.style.setProperty('--beat-glow', String(Math.min(1, beatPulse)))
+  if (model?.words.length) {
+    const word = model.words[activeWordIndex(model, songMs)]
+    if (word && songMs >= word.start && songMs <= word.end) {
+      const duration = Math.max(1, word.end - word.start)
+      const progress = Math.max(0, Math.min(1, (songMs - word.start) / duration))
+      level += 0.52 * Math.min(1, progress * 9) * (1 - progress * 0.82)
+    }
+  } else {
+    // Gentle ambient fallback while lyrics are unavailable; this is not beat detection.
+    level += 0.08 * (0.5 + 0.5 * Math.sin(wallMs / 1200))
+  }
+  rimLight.style.opacity = String(Math.max(0, Math.min(0.88, level + beatPulse * 0.72)))
 }
 
 function loop(): void {
@@ -132,6 +197,12 @@ api.onState((state) => {
 
 api.onAnchor((anchor) => {
   clock.setAnchor(anchor, performance.now(), Date.now())
+  startLoop()
+})
+
+api.onBeat((strength) => {
+  audioBeat = Math.max(audioBeat, Math.min(1, strength))
+  audioBeatAt = performance.now()
   startLoop()
 })
 
